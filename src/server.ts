@@ -2,6 +2,7 @@ import express, { Application, Router } from 'express';
 import bodyParser from 'body-parser';
 import monkeMapsRouter from './routers/MonkeMapsRouter';
 import connectDB from './connections/database';
+import Airtable from 'airtable';
 
 class Server {
     private app;
@@ -16,13 +17,14 @@ class Server {
     private config() {
         this.app.use(bodyParser.urlencoded({ extended:true }));
         this.app.use(bodyParser.json({ limit: '1mb' })); // 100kb default
+        Airtable.configure({ apiKey: process.env.AIRTABLE_API })
     }
 
     private dbConnect() {
-        connectDB()
-        .catch((err) => {
-            console.error('Connection error', err, err.message);
-        }); 
+        // connectDB()
+        // .catch((err) => {
+        //     console.error('Connection error', err, err.message);
+        // }); 
     }
 
     private routerConfig() {
