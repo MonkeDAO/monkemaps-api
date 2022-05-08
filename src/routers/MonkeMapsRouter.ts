@@ -4,6 +4,6 @@ import MonkeMapsController from '../controllers/MonkeMapsController';
 const router = Router();
 const monkeMapsController = new MonkeMapsController();
 
-router.get('/todos', monkeMapsController.get);
+router.get('/events', monkeMapsController.get);
 
 export default router;
