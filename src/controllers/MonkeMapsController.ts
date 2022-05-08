@@ -1,4 +1,6 @@
 import connectDb from '../connections/database';
+import Monke, { IMonke } from "../models/db/monke";
+import Event, { IEvent } from "../models/db/event";
 
 class MonkeMapsController {
 
