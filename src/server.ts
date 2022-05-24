@@ -21,10 +21,10 @@ class Server {
     }
 
     private dbConnect() {
-        // connectDB()
-        // .catch((err) => {
-        //     console.error('Connection error', err, err.message);
-        // }); 
+        connectDB()
+        .catch((err) => {
+            console.error('Connection error', err, err.message);
+        }); 
     }
 
     private routerConfig() {
