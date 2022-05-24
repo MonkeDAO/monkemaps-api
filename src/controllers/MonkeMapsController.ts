@@ -4,6 +4,7 @@ import Event, { IEvent } from "../models/db/event";
 import express, { Request, Response } from 'express';
 import Airtable from 'airtable';
 import dotenv from 'dotenv';
+import { Location } from '../models/location';
 dotenv.config();
 
 class MonkeMapsController {
@@ -28,8 +29,14 @@ class MonkeMapsController {
                 telegram,
                 discord,
                 monkeIds,
+                location,
                 image } = req.body;
-
+            
+            let mappedLocation: Location;
+            if(location) {
+                mappedLocation = location as Location;
+            }
+            
             let monkeParams = {
                 walletId,
                 twitter,
@@ -37,7 +44,8 @@ class MonkeMapsController {
                 telegram,
                 discord,
                 monkeIds,
-                image
+                image,
+                location: mappedLocation
             };
             let newMonke = new Monke(monkeParams);
             await newMonke.save();
@@ -56,11 +64,14 @@ class MonkeMapsController {
                 telegram,
                 discord,
                 monkeIds,
+                location,
                 image } = req.body;
             const monkeArr = monkeIds as string[];
             let foundMonke = await Monke.findOne({ walletId: walletId });
             if (foundMonke) {
                 //refactor this
+                const newLocation = verifyLocation(location, foundMonke);
+                foundMonke.location = newLocation;
                 if (validateInput(twitter, foundMonke)) {
                     foundMonke.twitter = twitter;
                 }
@@ -142,11 +153,38 @@ async function fetchCalendar(): Promise<any> {
     return events;
 }
 
-function validateInput(input, monke: IMonke): boolean {
+function validateInput(input: string, monke: IMonke): boolean {
     if ((input && monke[`${input}`] && monke[`${input}`] != input) || (input && !monke[`${input}`])) {
         return true;
     }
     return false;
+}
+
+function verifyLocation(location: any, monke: IMonke): Location {
+    //Refactor?
+    let currentLocation = monke.location;
+    if(location as Location) {
+        const newLocation = location as Location;
+        if(newLocation?.city != currentLocation.city){
+            currentLocation.city = newLocation.city;
+        }
+        if(newLocation?.state != currentLocation.state){
+            currentLocation.state = newLocation.state;
+        }
+        if(newLocation?.zipcode != currentLocation.zipcode){
+            currentLocation.zipcode = newLocation.zipcode;
+        }
+        if(newLocation?.country != currentLocation.country){
+            currentLocation.country = newLocation.country;
+        }
+        if(newLocation?.latitude != currentLocation.latitude){
+            currentLocation.latitude = newLocation.latitude;
+        }
+        if(newLocation?.longitude != currentLocation.longitude){
+            currentLocation.longitude = newLocation.longitude;
+        }
+    }
+    return currentLocation;
 }
 
 export default MonkeMapsController;
