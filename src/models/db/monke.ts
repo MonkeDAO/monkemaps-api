@@ -1,5 +1,5 @@
 import { Document, Model, model, Schema } from "mongoose";
-
+import { Location } from '../location';
 
 export interface IMonke extends Document {
     walletId: string,
@@ -9,8 +9,35 @@ export interface IMonke extends Document {
     discord: string,
     id: string,
     monkeIds: string[],
+    location: Location,
     image: string
 }
+
+const subSchema = new Schema({
+    latitude: {
+        type: String,
+        required: false,
+    },
+    longitude: {
+        type: String,
+        required: false,
+    },
+    city: {
+        type: String,
+        required: false,
+    },
+    state: {
+        type: String,
+        required: false,
+    },
+    country: {
+        type: String,
+        required: false,
+    },
+    zipcode: {
+        type: String,
+    }
+}, { _id : false });
 
 const monkeSchema: Schema = new Schema({
     walletId: {
@@ -48,6 +75,10 @@ const monkeSchema: Schema = new Schema({
         required: false,
         default: '',
     },
+    location: {
+        type: subSchema,
+        required: false,
+    }
 });
 
 const Monke: Model<IMonke> = model<IMonke>("Monke", monkeSchema);
