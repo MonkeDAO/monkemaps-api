@@ -132,13 +132,20 @@ async function fetchCalendar(): Promise<any> {
     let events: any[] = [];
     base('MonkeDAO Calendar').select({
         // Selecting the first 3 records in Events List:
-        maxRecords: 3,
+        maxRecords: 10,
         view: "Events List"
     }).eachPage(function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
-
         records.forEach(function (record) {
-            events.push(record);
+            let evt = {
+                name: record.get('Name'),
+                type: record.get('Type'),
+                location: record.get('Location'),
+                start_date: record.get('Starting Date'),
+                end_date: record.get('End Date'),
+                status: record.get('Status'),
+            }
+            events.push(evt);
             console.log('Retrieved', record.get('Name'));
         });
 
@@ -149,8 +156,11 @@ async function fetchCalendar(): Promise<any> {
 
     }, function done(err) {
         if (err) { console.error(err); return; }
+        else {
+            console.log('done events', events);
+            return events;
+        }
     });
-    return events;
 }
 
 function validateInput(input: string, monke: IMonke): boolean {
