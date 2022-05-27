@@ -13,7 +13,7 @@ class MonkeMapsController {
         try {
             //const client = await connectDb();
 
-            const result = await fetchCalendar();
+            const result = await getCalendar();
             res.send(JSON.stringify(result));
         } catch (error) {
             console.log(error, error.message)
@@ -101,8 +101,9 @@ class MonkeMapsController {
 
     public async deleteMonke(req: Request, res: Response) {
         try {
-            const { id } = req.query;
+            const { id } = req.params;
             await Monke.deleteOne({ walletId: id });
+            res.status(200).send();
         } catch (error) {
             console.log(error, error.message)
             res.status(400).send(error);
@@ -112,7 +113,7 @@ class MonkeMapsController {
     public async getUser(req: Request, res: Response) {
         try {
             //const client = await connectDb();
-            const { id } = req.query;
+            const { id } = req.params;
             const monke = await Monke.findOne({ walletId: id });
             if (monke) {
                 res.status(200).json(monke);
@@ -127,14 +128,54 @@ class MonkeMapsController {
     }
 }
 
+function getCalendar (): Promise<any> {
+    return new Promise((resolve, reject) => {
+        const base = new Airtable({
+            apiKey: process.env.AIRTABLE_API,
+        }).base(process.env.AIRTABLE_BASE_ID);
+        const table = base('MonkeDAO Calendar');
+    
+        const events = [];
+    
+        console.log('starting fetch');
+        
+        table.select({
+            view: 'Events List'
+        }).eachPage((records, processNextPage) => {
+            console.log('found records ', records)
+            records.forEach((record) => {
+                events.push({
+                    name: record.get('Name'),
+                    type: record.get('Type'),
+                    location: record.get('Location'),
+                    start_date: record.get('Starting Date'),
+                    end_date: record.get('End Date'),
+                    status: record.get('Status'),
+                });
+                console.log('Retrieved', record.get('Name'));
+            });
+    
+            processNextPage();
+        }, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(events);
+            }
+        })
+    })
+}
+
 async function fetchCalendar(): Promise<any> {
     var base = new Airtable({ apiKey: process.env.AIRTABLE_API }).base('appntlNIDLaxFCZp0');
     let events: any[] = [];
+    console.log('fetching')
     base('MonkeDAO Calendar').select({
         // Selecting the first 3 records in Events List:
         maxRecords: 10,
         view: "Events List"
     }).eachPage(function page(records, fetchNextPage) {
+        console.log('found: ', records)
         // This function (`page`) will get called for each page of records.
         records.forEach(function (record) {
             let evt = {
