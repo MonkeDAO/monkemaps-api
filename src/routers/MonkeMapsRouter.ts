@@ -5,6 +5,7 @@ const router = Router();
 const monkeMapsController = new MonkeMapsController();
 
 router.get('/events', monkeMapsController.get);
+router.get('/users', monkeMapsController.getAllMonkes);
 router.post('/users', monkeMapsController.createmonke);
 router.get('/users/:id', monkeMapsController.getUser);
 router.put('/users/:id', monkeMapsController.updatemonke);
