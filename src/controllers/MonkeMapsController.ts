@@ -21,6 +21,17 @@ class MonkeMapsController {
         }
     }
 
+    public async getAllMonkes(eq: Request, res: Response) {
+        try {
+            const result = await Monke.find({walletId: {$exists: true}});
+            res.send(JSON.stringify(result));
+        }
+        catch (error) {
+            console.log(error, error.message);
+            res.status(400).send(error);
+        }
+    }
+
     public async createmonke(req: Request, res: Response) {
         try {
             const { walletId,
