@@ -4,16 +4,68 @@ import Event, { IEvent } from "../models/db/event";
 import express, { Request, Response } from 'express';
 import Airtable from 'airtable';
 import dotenv from 'dotenv';
+
 import { Location } from '../models/location';
+
+const puppeteer = require('puppeteer');
 dotenv.config();
+
+const wait = (time: number) => new Promise((resolve, reject) => {
+    setTimeout(resolve, time)
+  })
+  
+  const waitForUrl = async (page: any, retry = 0) => {
+    if (retry > 10) return null;
+    const matched = urlLoaded(page.url());
+    if (matched) {
+      console.log(retry)
+      return matched
+    }
+    else {
+      await wait(1000);
+      return waitForUrl(page, retry + 1)
+    }
+  }
+  
+  const urlLoaded = (url: string) => {
+    const matches = url.match(/@([+-]?\w+\.\w+),([+-]?\w+\.\w+)/);
+    if (matches && matches.length === 3) {
+      return [matches[1], matches[2]]
+    }
+    return null
+  }
+
+const GoogleMapsCoordinateScraper = {
+    scrape: async (url: string) => {
+        const browser = await puppeteer.launch({ headless: true });
+        try {
+            const page = await browser.newPage();
+            await page.goto(url);
+
+            const coords = await waitForUrl(page)
+        
+            await browser.close();
+
+            return coords;
+        } catch (e) {
+            throw e
+        } finally {
+            await browser.close();
+        }
+    }
+}
 
 class MonkeMapsController {
 
     public async get(req: Request, res: Response) {
         try {
-            //const client = await connectDb();
-
             const result = await getCalendar();
+
+            // get corresponding events from ddb
+            // check if they need to be re-scraped
+            //      scrape
+            //      return events
+
             res.send(JSON.stringify(result));
         } catch (error) {
             console.log(error, error.message)
