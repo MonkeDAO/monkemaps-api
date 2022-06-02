@@ -144,7 +144,9 @@ function getCalendar (): Promise<any> {
         }).eachPage((records, processNextPage) => {
             console.log('found records ', records)
             records.forEach((record) => {
+                console.log('Record: ', record)
                 events.push({
+                    id: record.id,
                     name: record.get('Name'),
                     type: record.get('Type'),
                     location: record.get('Location'),
