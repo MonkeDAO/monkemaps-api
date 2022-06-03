@@ -1,4 +1,3 @@
-import connectDb from '../connections/database';
 import Monke, { IMonke } from "../models/db/monke";
 import Event, { IEvent } from "../models/db/event";
 import express, { Request, Response } from 'express';
@@ -6,8 +5,6 @@ import Airtable from 'airtable';
 import dotenv from 'dotenv';
 
 import { Location } from '../models/location';
-
-const puppeteer = require('puppeteer');
 dotenv.config();
 
 type MonkeLocation = {
@@ -39,52 +36,8 @@ type MonkeEvent = {
     type: string,
     status: string,
     link: string,
+    extraLink: string,
     contacts: string[]
-}
-
-const wait = (time: number) => new Promise((resolve, reject) => {
-    setTimeout(resolve, time)
-  })
-  
-  const waitForUrl = async (page: any, retry = 0) => {
-    if (retry > 10) return null;
-    const matched = urlLoaded(page.url());
-    if (matched) {
-      console.log(retry)
-      return matched
-    }
-    else {
-      await wait(1000);
-      return waitForUrl(page, retry + 1)
-    }
-  }
-  
-  const urlLoaded = (url: string) => {
-    const matches = url.match(/@([+-]?\w+\.\w+),([+-]?\w+\.\w+)/);
-    if (matches && matches.length === 3) {
-      return [matches[1], matches[2]]
-    }
-    return null
-  }
-
-const GoogleMapsCoordinateScraper = {
-    scrape: async (url: string) => {
-        const browser = await puppeteer.launch({ headless: true });
-        try {
-            const page = await browser.newPage();
-            await page.goto(url);
-
-            const coords = await waitForUrl(page)
-        
-            await browser.close();
-
-            return coords;
-        } catch (e) {
-            throw e
-        } finally {
-            await browser.close();
-        }
-    }
 }
 
 class MonkeMapsController {
@@ -123,9 +76,9 @@ class MonkeMapsController {
                 github,
                 telegram,
                 discord,
-                monkeIds,
+                monkeId,
                 location,
-                image } = req.body;
+                image, nickName } = req.body;
             
             let mappedLocation: Location;
             if(location) {
@@ -138,9 +91,10 @@ class MonkeMapsController {
                 github,
                 telegram,
                 discord,
-                monkeIds,
+                monkeId,
                 image,
-                location: mappedLocation
+                location: mappedLocation,
+                nickName
             };
             let newMonke = new Monke(monkeParams);
             await newMonke.save();
@@ -158,10 +112,9 @@ class MonkeMapsController {
                 github,
                 telegram,
                 discord,
-                monkeIds,
+                monkeId,
                 location,
-                image } = req.body;
-            const monkeArr = monkeIds as string[];
+                image, nickName } = req.body;
             let foundMonke = await Monke.findOne({ walletId: walletId });
             if (foundMonke) {
                 //refactor this
@@ -182,8 +135,11 @@ class MonkeMapsController {
                 if (validateInput(image, foundMonke)) {
                     foundMonke.image = image;
                 }
-                if ((monkeArr && foundMonke.monkeIds && foundMonke.monkeIds.length != monkeArr?.length) || (monkeArr && foundMonke.monkeIds.length == 0)) {
-                    foundMonke.monkeIds = monkeArr;
+                if (validateInput(nickName, foundMonke)) {
+                    foundMonke.nickName = nickName;
+                }
+                if (validateInput(monkeId, foundMonke)) {
+                    foundMonke.monkeId = monkeId;
                 }
             }
             await foundMonke.save();
