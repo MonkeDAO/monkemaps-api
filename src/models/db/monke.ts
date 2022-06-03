@@ -2,13 +2,14 @@ import { Document, Model, model, Schema } from "mongoose";
 import { Location } from '../location';
 
 export interface IMonke extends Document {
+    nickName: string,
     walletId: string,
     twitter: string,
     github: string,
     telegram: string,
     discord: string,
     id: string,
-    monkeIds: string[],
+    monkeId: string,
     location: Location,
     image: string
 }
@@ -36,6 +37,7 @@ const subSchema = new Schema({
     },
     zipcode: {
         type: String,
+        required: false,
     }
 }, { _id : false });
 
@@ -46,6 +48,11 @@ const monkeSchema: Schema = new Schema({
         unique: true
     },
     twitter: {
+        type: String,
+        required: false,
+        default: '',
+    },
+    nickName: {
         type: String,
         required: false,
         default: '',
@@ -65,11 +72,11 @@ const monkeSchema: Schema = new Schema({
         required: false,
         default: '',
     },
-    monkeIds: [{
+    monkeId: {
         type: String,
         required: false,
         default: '',
-    }],
+    },
     image: {
         type: String,
         required: false,
