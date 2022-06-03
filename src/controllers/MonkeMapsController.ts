@@ -10,6 +10,32 @@ import { Location } from '../models/location';
 const puppeteer = require('puppeteer');
 dotenv.config();
 
+type Monke = {
+    nickName: string,
+    walletId: string,
+    twitter: string,
+    github: string,
+    telegram: string,
+    discord: string,
+    monkeId: string,
+    image: string,
+    location: string,
+    coordinates: [number, number],
+}
+
+type MonkeEvent = {
+    location: string,
+    coordinates: [number, number],
+    name: string,
+    startDate: string,
+    endDate: string,
+    virtual: boolean,
+    type: string,
+    status: string,
+    link: string,
+    contacts: string[]
+}
+
 const wait = (time: number) => new Promise((resolve, reject) => {
     setTimeout(resolve, time)
   })
@@ -213,6 +239,7 @@ function getCalendar (): Promise<any> {
                     name: record.get('Name'),
                     type: record.get('Type'),
                     location: record.get('Location'),
+                    coordinates: [],
                     start_date: record.get('Starting Date'),
                     end_date: record.get('End Date'),
                     status: record.get('Status'),
