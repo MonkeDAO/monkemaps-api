@@ -10,22 +10,28 @@ import { Location } from '../models/location';
 const puppeteer = require('puppeteer');
 dotenv.config();
 
+type MonkeLocation = {
+    hasLink: boolean,
+    link: string,
+    text: string,
+    coordinates: [number, number],
+}
+
 type Monke = {
-    nickName: string,
     walletId: string,
+    nickName: string,
     twitter: string,
     github: string,
     telegram: string,
     discord: string,
     monkeId: string,
     image: string,
-    location: string,
-    coordinates: [number, number],
+    location: MonkeLocation
 }
 
 type MonkeEvent = {
-    location: string,
-    coordinates: [number, number],
+    id: string,
+    location: MonkeLocation
     name: string,
     startDate: string,
     endDate: string,
