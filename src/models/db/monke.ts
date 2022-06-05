@@ -23,22 +23,10 @@ const subSchema = new Schema({
         type: String,
         required: false,
     },
-    city: {
+    text: {
         type: String,
         required: false,
     },
-    state: {
-        type: String,
-        required: false,
-    },
-    country: {
-        type: String,
-        required: false,
-    },
-    zipcode: {
-        type: String,
-        required: false,
-    }
 }, { _id : false });
 
 const monkeSchema: Schema = new Schema({

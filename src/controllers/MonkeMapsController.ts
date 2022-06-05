@@ -4,15 +4,8 @@ import express, { Request, Response } from 'express';
 import Airtable from 'airtable';
 import dotenv from 'dotenv';
 
-import { Location } from '../models/location';
+import { Location, MonkeLocation } from '../models/location';
 dotenv.config();
-
-type MonkeLocation = {
-    hasLink: boolean,
-    link: string,
-    text: string,
-    coordinates: [number, number],
-}
 
 type Monke = {
     walletId: string,
@@ -39,6 +32,12 @@ type MonkeEvent = {
     extraLink: string,
     contacts: string[]
 }
+
+const mapLocation = (location: MonkeLocation): Location => ({
+    latitude: `${location.coordinates[0]}`,
+    longitude: `${location.coordinates[1]}`,
+    text: location.text,
+});
 
 class MonkeMapsController {
 
@@ -80,11 +79,6 @@ class MonkeMapsController {
                 location,
                 image, nickName } = req.body;
             
-            let mappedLocation: Location;
-            if(location) {
-                mappedLocation = location as Location;
-            }
-            
             let monkeParams = {
                 walletId,
                 twitter,
@@ -93,7 +87,7 @@ class MonkeMapsController {
                 discord,
                 monkeId,
                 image,
-                location: mappedLocation,
+                location: mapLocation(location),
                 nickName
             };
             let newMonke = new Monke(monkeParams);
@@ -118,8 +112,8 @@ class MonkeMapsController {
             let foundMonke = await Monke.findOne({ walletId: walletId });
             if (foundMonke) {
                 //refactor this
-                const newLocation = verifyLocation(location, foundMonke);
-                foundMonke.location = newLocation;
+                // const newLocation = verifyLocation(location, foundMonke);
+                foundMonke.location = location;
                 if (validateInput(twitter, foundMonke)) {
                     foundMonke.twitter = twitter;
                 }
@@ -220,44 +214,6 @@ function getCalendar (): Promise<any> {
     })
 }
 
-async function fetchCalendar(): Promise<any> {
-    var base = new Airtable({ apiKey: process.env.AIRTABLE_API }).base('appntlNIDLaxFCZp0');
-    let events: any[] = [];
-    console.log('fetching')
-    base('MonkeDAO Calendar').select({
-        // Selecting the first 3 records in Events List:
-        maxRecords: 10,
-        view: "Events List"
-    }).eachPage(function page(records, fetchNextPage) {
-        console.log('found: ', records)
-        // This function (`page`) will get called for each page of records.
-        records.forEach(function (record) {
-            let evt = {
-                name: record.get('Name'),
-                type: record.get('Type'),
-                location: record.get('Location'),
-                start_date: record.get('Starting Date'),
-                end_date: record.get('End Date'),
-                status: record.get('Status'),
-            }
-            events.push(evt);
-            console.log('Retrieved', record.get('Name'));
-        });
-
-        // To fetch the next page of records, call `fetchNextPage`.
-        // If there are more records, `page` will get called again.
-        // If there are no more records, `done` will get called.
-        //fetchNextPage();
-
-    }, function done(err) {
-        if (err) { console.error(err); return; }
-        else {
-            console.log('done events', events);
-            return events;
-        }
-    });
-}
-
 function validateInput(input: string, monke: IMonke): boolean {
     if ((input && monke[`${input}`] && monke[`${input}`] != input) || (input && !monke[`${input}`])) {
         return true;
@@ -270,6 +226,9 @@ function verifyLocation(location: any, monke: IMonke): Location {
     let currentLocation = monke.location;
     if(location as Location) {
         const newLocation = location as Location;
+        if(newLocation?.text != currentLocation.text){
+            currentLocation.text = newLocation.text;
+        }
         if(newLocation?.city != currentLocation.city){
             currentLocation.city = newLocation.city;
         }

@@ -1,4 +1,12 @@
+export type MonkeLocation = {
+    hasLink: boolean,
+    link: string,
+    text: string,
+    coordinates: [number, number],
+}
+
 export interface Location {
+    text?: string;
     latitude?: string;
     longitude?: string;
     city?: string;
