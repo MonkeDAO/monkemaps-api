@@ -1,8 +1,11 @@
 
+import Geocoding from '@mapbox/mapbox-sdk/services/geocoding';
 const puppeteer = require('puppeteer');
+const geoService = Geocoding({accessToken: 'pk.eyJ1IjoiMHhkb24iLCJhIjoiY2wzeWtqcmJkMG1yMzNybnh5dDE4amxhYyJ9.bOSRMX8QHTVQ2Nrlhxxb1g'}) 
+
 
 const GoogleMapsLinks = {
-    urls: ["g.page", "goog.gl/maps", "goog.gl", "maps.google", "maps.app.goo.gl"],
+    urls: ["g.page", "goog.gl/maps", "goog.gl", "maps.google", "maps.app.goo.gl", "goo.gl"],
     isUrl(url: string) {
         return this.urls.some((link: string) => url.includes(link));
     }
@@ -36,7 +39,7 @@ export const waitForUrl = async (page: any, retry = 0) => {
 export const urlLoaded = (url: string) => {
     const matches = url.match(/@([+-]?\w+\.\w+),([+-]?\w+\.\w+)/);
     if (matches && matches.length === 3) {
-        return [matches[1], matches[2]]
+        return [Number(matches[1]), Number(matches[2])]
     }
     return null
 }
@@ -62,4 +65,39 @@ export const GoogleMapsCoordinateScraper = {
         }
         return null;
     }
+}
+
+export async function GetCoordinatesFromText(name: string): Promise<[number, number]> {
+    if(!name){
+        return [0,0]
+    }
+    console.log('GetCoordinatesFromText', name);
+    const parsedName = name.split(',');
+    let country = ['us'];
+    let queryString = '';
+    if(parsedName.length > 1) {
+        queryString = `${parsedName[0]}, ${parsedName[1]}`;
+        country = [parsedName[1].toLowerCase()];
+    }
+    else {
+        queryString = parsedName[0];
+        country = undefined;
+    }
+    const results = await geoService.forwardGeocode({
+        query: queryString,
+        autocomplete: true,
+    }).send();
+    console.log(results);
+    let coords = results.body.features[0].geometry.coordinates;
+    return [coords[1], coords[0]];
+    
+}
+
+export async function GetTextFromCoordinates(coords: [number, number]): Promise<string> {
+    console.log('GetTextFromCoordinates', coords);
+    const results = await geoService.reverseGeocode({
+        query: [coords[1],coords[0]]
+    }).send();
+    console.log(results);
+    return results.body.features[0].place_name;
 }

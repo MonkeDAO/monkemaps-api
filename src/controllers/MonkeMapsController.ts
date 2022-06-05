@@ -5,6 +5,7 @@ import Airtable from 'airtable';
 import dotenv from 'dotenv';
 
 import { Location, MonkeLocation } from '../models/location';
+import { chunkItems, GoogleMapsCoordinateScraper, GetTextFromCoordinates, GetCoordinatesFromText } from '../utils/util';
 dotenv.config();
 
 type Monke = {
@@ -39,18 +40,65 @@ const mapLocation = (location: MonkeLocation): Location => ({
     text: location.text,
 });
 
+function isUrl(text: string): boolean {
+    return text.includes('http');
+}
+
+const mapEvent = (event: any): MonkeEvent => ({
+    id: event.id,
+    location: {
+        link: isUrl(event.location) ? event.location: '',
+        hasLink: isUrl(event.location),
+        coordinates: [0,0],
+        text: event.location
+    },
+    type: event.type?.trim(),
+    name: event.name?.trim(),
+    contacts: event.contacts,
+    startDate: event.start_date,
+    endDate: event.end_date,
+    extraLink: event.externalLink?.trim(),
+    virtual: isVirtual(event),
+    link: event.location?.trim(),
+    status: event.status?.trim()
+});
+
+function isVirtual(event: any): boolean {
+    if(event.type && (event.type == 'Mainstream Event' || event.type == 'MonkeDAO Event' || event.type == 'MonkeDAO Meet-up')) {
+        return false;
+    }
+    return true;
+};
+
 class MonkeMapsController {
 
     public async get(req: Request, res: Response) {
         try {
-            const result = await getCalendar();
+            const result: any[] = await getCalendar();
+            let mappedEvents = result.map((x: any) => mapEvent(x));
+            console.log(mappedEvents);
+            let chunkedEvents = chunkItems(mappedEvents, 10);
+            for(let chunk of chunkedEvents) {
+                await Promise.all(chunk.map(async (evt, index) => {
+                    if(!evt.virtual) {
+                        const locationCoords = await GoogleMapsCoordinateScraper.scrape(evt.location.text);
+                        if(locationCoords != null) {
+                            const text = await GetTextFromCoordinates(locationCoords);
+                            evt.location.coordinates = locationCoords;
+                            evt.location.text = text;
+                            Promise.resolve(evt);
+                        }
+                        else {
+                            const coords = await GetCoordinatesFromText(evt.location.text);
+                            evt.location.coordinates = coords;
+                            Promise.resolve(evt);
+                        }
+                    }
+                    else Promise.resolve();
+                }));
+            }
 
-            // get corresponding events from ddb
-            // check if they need to be re-scraped
-            //      scrape
-            //      return events
-
-            res.send(JSON.stringify(result));
+            res.send(JSON.stringify(mappedEvents));
         } catch (error) {
             console.log(error, error.message)
             res.status(400).send(error);
@@ -198,7 +246,9 @@ function getCalendar (): Promise<any> {
                     coordinates: [],
                     start_date: record.get('Starting Date'),
                     end_date: record.get('End Date'),
-                    status: record.get('Status'),
+                    status: record.get('Status '),
+                    externalLink: record.get('Form / External Link'),
+                    contacts: record.get('IRL Contact')
                 });
                 console.log('Retrieved', record.get('Name'));
             });
