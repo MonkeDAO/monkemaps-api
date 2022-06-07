@@ -1,9 +1,9 @@
 import Monke, { IMonke } from "../models/db/monke";
-import Event, { IEvent } from "../models/db/event";
+import DbEvent, { IEvent } from "../models/db/event";
 import express, { Request, Response } from 'express';
 import Airtable from 'airtable';
 import dotenv from 'dotenv';
-
+import _ from 'lodash';
 import { Location, MonkeLocation } from '../models/location';
 import { chunkItems, GoogleMapsCoordinateScraper, GetTextFromCoordinates, GetCoordinatesFromText } from '../utils/util';
 dotenv.config();
@@ -63,6 +63,41 @@ const mapEvent = (event: any): MonkeEvent => ({
     status: event.status?.trim()
 });
 
+const mapFromDbEvent = (event: IEvent): MonkeEvent => ({
+    id: event.airtableId,
+    location: event.location,
+    type: event.type?.trim(),
+    name: event.name?.trim(),
+    contacts: event.contacts,
+    startDate: event.startDate,
+    endDate: event.endDate,
+    extraLink: event.extraLink?.trim(),
+    virtual: event.virtual,
+    link: event.location.hasLink ? event.location.link : '',
+    status: event.status
+});
+
+const mapToDbEvent = (event: MonkeEvent): any => ({
+    airtableId: event.id,
+    location: {
+        link: event.location.link,
+        hasLink: event.location.hasLink,
+        coordinates: event.location.coordinates,
+        text: event.location.text
+    },
+    type: event.type?.trim(),
+    name: event.name?.trim(),
+    contacts: event.contacts,
+    startDate: event.startDate,
+    endDate: event.endDate,
+    extraLink: event.extraLink?.trim(),
+    virtual: event.virtual,
+    link: event.location.hasLink ? event.location.link : '',
+    status: event.status
+});
+
+
+
 function isVirtual(event: any): boolean {
     if(event.type && (event.type == 'Mainstream Event' || event.type == 'MonkeDAO Event' || event.type == 'MonkeDAO Meet-up')) {
         return false;
@@ -76,8 +111,12 @@ class MonkeMapsController {
         try {
             const result: any[] = await getCalendar();
             let mappedEvents = result.map((x: any) => mapEvent(x));
+            let eventsFromDb = await DbEvent.find({"airtableId": {"$exists" : true, "$ne" : ""}});
+            if (eventsFromDb.length > 0) {
+                mappedEvents = mappedEvents.filter(ar => !eventsFromDb.find(rm => (rm.airtableId === ar.id) ));
+            }
             console.log(mappedEvents);
-            let chunkedEvents = chunkItems(mappedEvents, 10);
+            let chunkedEvents = chunkItems(mappedEvents, 3);
             for(let chunk of chunkedEvents) {
                 await Promise.all(chunk.map(async (evt, index) => {
                     if(!evt.virtual) {
@@ -98,7 +137,14 @@ class MonkeMapsController {
                 }));
             }
 
-            res.send(JSON.stringify(mappedEvents));
+            if(mappedEvents.length > 0) {
+                let eventsToSave = mappedEvents.map(e => new DbEvent(mapToDbEvent(e)));
+                await DbEvent.collection.insertMany(eventsToSave);
+            }
+            
+            let eventsToReturn = _.concat(mappedEvents, eventsFromDb.map(x => mapFromDbEvent(x.toObject())));
+
+            res.send(JSON.stringify(eventsToReturn));
         } catch (error) {
             console.log(error, error.message)
             res.status(400).send(error);
