@@ -1,71 +1,78 @@
 import { Document, Model, model, Schema } from "mongoose";
-import { EventLocation } from "../location";
+import { MonkeLocation } from "../location";
 
 
 export interface IEvent extends Document {
     name: string,
-    host: string,
-    date: Date,
+    startDate: string,
+    endDate: string,
+    virtual: boolean,
+    type: string,
+    status: string,
     link: string,
-    location: EventLocation,
+    extraLink: string,
+    contacts: string[],
+    location: MonkeLocation,
     id: string,
     image: string,
     airtableId: string
 }
 
 const subSchema = new Schema({
-    latitude: {
+
+    "link": {
         type: String,
         required: false,
     },
-    longitude: {
-        type: String,
+    "hasLink": {
+        type: Boolean,
         required: false,
+        default: false
     },
-    city: {
-        type: String,
+    "coordinates": {
+        type: [
+            Number
+        ],
         required: false,
+        default: [0,0]
     },
-    state: {
-        type: String,
-        required: false,
-    },
-    country: {
-        type: String,
-        required: false,
-    },
-    zipcode: {
-        type: String,
-        required: false,
-    },
-    address1: {
-        type: String,
-        required: false,
-    },
-    address2: {
+    "text": {
         type: String,
         required: false,
     }
-}, { _id : false });
+
+}, { _id: false });
 
 const eventSchema: Schema = new Schema({
-    name: {
-        type: String,
-        required: true,
+
+    "type": {
+        "type": "String"
     },
-    host: {
-        type: String,
-        required: false,
-        default: 'MonkeDAO',
+    "name": {
+        "type": "String"
     },
-    date: {
-        type: Date,
-        required: false,
+    "contacts": {
+        "type": [
+            "String"
+        ]
     },
-    link: {
-        type: String,
-        required: false,
-        default: '',
+    "startDate": {
+        "type": "Date"
+    },
+    "endDate": {
+        "type": "Date"
+    },
+    "extraLink": {
+        "type": "String"
+    },
+    "virtual": {
+        "type": "Boolean"
+    },
+    "link": {
+        "type": "String"
+    },
+    "status": {
+        "type": "String"
     },
     location: subSchema,
     image: {
@@ -80,6 +87,6 @@ const eventSchema: Schema = new Schema({
     },
 });
 
-const Monke: Model<IEvent> = model<IEvent>("Event", eventSchema);
+const DbEvent: Model<IEvent> = model<IEvent>("DbEvent", eventSchema);
 
-export default Event;
+export default DbEvent;
