@@ -13,6 +13,7 @@ export interface IMonke extends Document {
     location: Location,
     image: string,
     monkeNumber: string,
+    signature: string,
 }
 
 const subSchema = new Schema({
@@ -79,7 +80,12 @@ const monkeSchema: Schema = new Schema({
     location: {
         type: subSchema,
         required: false,
-    }
+    },
+    signature: {
+        type: String,
+        required: true,
+        default: '',
+    },
 });
 
 const Monke: Model<IMonke> = model<IMonke>("Monke", monkeSchema);

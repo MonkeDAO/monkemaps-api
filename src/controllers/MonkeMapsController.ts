@@ -153,7 +153,7 @@ class MonkeMapsController {
 
     public async getAllMonkes(eq: Request, res: Response) {
         try {
-            const result = await Monke.find({walletId: {$exists: true}});
+            const result = await Monke.find({walletId: {$exists: true}}).select("-signature");
             res.send(JSON.stringify(result.map(x => x.toObject())));
         }
         catch (error) {
@@ -203,7 +203,7 @@ class MonkeMapsController {
                 monkeId,
                 location,
                 image, nickName, monkeNumber } = req.body;
-            let foundMonke = await Monke.findOne({ walletId: walletId });
+            let foundMonke = await Monke.findOne({ walletId: walletId }).select("-signature");
             if (foundMonke) {
                 //refactor this
                 // const newLocation = verifyLocation(location, foundMonke);
@@ -256,7 +256,7 @@ class MonkeMapsController {
         try {
             //const client = await connectDb();
             const { id } = req.params;
-            const monke = await Monke.findOne({ walletId: id });
+            const monke = await Monke.findOne({ walletId: id }).select("-signature");
             if (monke) {
                 res.status(200).json(monke);
             }
