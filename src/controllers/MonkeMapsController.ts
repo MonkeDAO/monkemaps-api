@@ -142,7 +142,7 @@ class MonkeMapsController {
                 await DbEvent.collection.insertMany(eventsToSave);
             }
             
-            let eventsToReturn = _.concat(mappedEvents, eventsFromDb.map(x => mapFromDbEvent(x.toObject())));
+            let eventsToReturn = _.concat(mappedEvents, eventsFromDb.map(x => mapFromDbEvent(x)));
 
             res.send(JSON.stringify(eventsToReturn));
         } catch (error) {

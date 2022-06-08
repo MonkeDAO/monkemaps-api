@@ -9,7 +9,7 @@
     "build": "tsc",
     "dev": "nodemon src/app.ts -w",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "tsc": "build",
+    "tsc": "tsc",
     "watch-tsc": "tsc -w",
     "deploy": "node dist/app.js",
     "devdeploy": "env-cmd -f development.env node dist/app.js",
