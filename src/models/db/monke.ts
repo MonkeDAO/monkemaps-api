@@ -11,7 +11,8 @@ export interface IMonke extends Document {
     id: string,
     monkeId: string,
     location: Location,
-    image: string
+    image: string,
+    monkeNumber: string,
 }
 
 const subSchema = new Schema({
@@ -66,6 +67,11 @@ const monkeSchema: Schema = new Schema({
         default: '',
     },
     image: {
+        type: String,
+        required: false,
+        default: '',
+    },
+    monkeNumber: {
         type: String,
         required: false,
         default: '',

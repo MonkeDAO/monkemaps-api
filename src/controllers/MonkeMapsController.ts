@@ -202,7 +202,7 @@ class MonkeMapsController {
                 discord,
                 monkeId,
                 location,
-                image, nickName } = req.body;
+                image, nickName, monkeNumber } = req.body;
             let foundMonke = await Monke.findOne({ walletId: walletId });
             if (foundMonke) {
                 //refactor this
@@ -228,6 +228,9 @@ class MonkeMapsController {
                 }
                 if (validateInput(monkeId, foundMonke)) {
                     foundMonke.monkeId = monkeId;
+                }
+                if (validateInput(monkeNumber, foundMonke)) {
+                    foundMonke.monkeNumber = monkeNumber;
                 }
             }
             await foundMonke.save();
