@@ -154,7 +154,7 @@ class MonkeMapsController {
     public async getAllMonkes(eq: Request, res: Response) {
         try {
             const result = await Monke.find({walletId: {$exists: true}});
-            res.send(JSON.stringify(result));
+            res.send(JSON.stringify(result.map(x => x.toObject())));
         }
         catch (error) {
             console.log(error, error.message);
