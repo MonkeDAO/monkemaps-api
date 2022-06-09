@@ -24,7 +24,7 @@ jobs:
       with:
         registry: https://ghcr.io/
         username: ${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_6146c118176e4024beb0c264b05b1945 }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build and push container image to registry
       uses: docker/build-push-action@v2
