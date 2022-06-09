@@ -30,7 +30,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: ghcr.io/${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}/thedonmon/monkemaps:${{ github.sha }}
+        tags: ghcr.io/${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}/thedonmon/monkemaps-api:${{ github.sha }}
         file: ./Dockerfile
 
   deploy:
@@ -48,4 +48,4 @@ jobs:
         app-name: 'monkemaps'
         slot-name: 'production'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_54dea296e6c04f199c92bf03979d029b }}
-        images: 'ghcr.io/${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}/thedonmon/monkemaps:${{ github.sha }}'
+        images: 'ghcr.io/${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}/thedonmon/monkemaps-api:${{ github.sha }}'
