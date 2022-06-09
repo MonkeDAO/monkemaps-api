@@ -273,8 +273,8 @@ class MonkeMapsController {
 function getCalendar (): Promise<any> {
     return new Promise((resolve, reject) => {
         const base = new Airtable({
-            apiKey: process.env.AIRTABLE_API,
-        }).base(process.env.AIRTABLE_BASE_ID);
+            apiKey: process.env.AIRTABLE_API ?? process.env.APPSETTING_AIRTABLE_API,
+        }).base(process.env.AIRTABLE_BASE_ID ?? process.env.APPSETTING_AIRTABLE_BASE_ID);
         const table = base('MonkeDAO Calendar');
     
         const events = [];
