@@ -23,14 +23,14 @@ jobs:
       uses: docker/login-action@v1
       with:
         registry: https://ghcr.io/
-        username: ${{ secrets.AzureAppService_ContainerUsername_266ac2e29e1a46f09903fdaf911bbebc }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_19b7e2b1065f46b0bafdf8cc17e0537d }}
+        username: ${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_6146c118176e4024beb0c264b05b1945 }}
 
     - name: Build and push container image to registry
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: ghcr.io/${{ secrets.AzureAppService_ContainerUsername_266ac2e29e1a46f09903fdaf911bbebc }}:${{ github.sha }}
+        tags: ghcr.io/${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}/thedonmon/monkemaps:${{ github.sha }}
         file: ./Dockerfile
 
   deploy:
@@ -47,5 +47,5 @@ jobs:
       with:
         app-name: 'monkemaps'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_c1be565731bf403dba97f53078466fec }}
-        images: 'ghcr.io/${{ secrets.AzureAppService_ContainerUsername_266ac2e29e1a46f09903fdaf911bbebc }}:${{ github.sha }}'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_54dea296e6c04f199c92bf03979d029b }}
+        images: 'ghcr.io/${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}/thedonmon/monkemaps:${{ github.sha }}'
