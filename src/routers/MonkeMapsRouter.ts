@@ -4,6 +4,7 @@ import MonkeMapsController from '../controllers/MonkeMapsController';
 const router = Router();
 const monkeMapsController = new MonkeMapsController();
 
+router.get('/', monkeMapsController.get);
 router.get('/events', monkeMapsController.get);
 router.get('/users', monkeMapsController.getAllMonkes);
 router.post('/users', monkeMapsController.createmonke);
