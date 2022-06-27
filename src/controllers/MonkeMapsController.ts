@@ -142,7 +142,7 @@ class MonkeMapsController {
                 await DbEvent.collection.insertMany(eventsToSave);
             }
             
-            let eventsToReturn = _.concat(mappedEvents, eventsFromDb.map(x => mapFromDbEvent(x.toObject())));
+            let eventsToReturn = _.concat(mappedEvents, eventsFromDb.map(x => mapFromDbEvent(x))).filter((item: MonkeEvent) => (new Date(item.startDate).getTime() > Date.now() - 336 * 60 * 60 * 1000));
 
             res.send(JSON.stringify(eventsToReturn));
         } catch (error) {
@@ -153,7 +153,7 @@ class MonkeMapsController {
 
     public async getAllMonkes(eq: Request, res: Response) {
         try {
-            const result = await Monke.find({walletId: {$exists: true}}).select("-signature");
+            const result = await Monke.find({walletId: {$exists: true}});
             res.send(JSON.stringify(result.map(x => x.toObject())));
         }
         catch (error) {
@@ -203,7 +203,7 @@ class MonkeMapsController {
                 monkeId,
                 location,
                 image, nickName, monkeNumber } = req.body;
-            let foundMonke = await Monke.findOne({ walletId: walletId }).select("-signature");
+            let foundMonke = await Monke.findOne({ walletId: walletId });
             if (foundMonke) {
                 //refactor this
                 // const newLocation = verifyLocation(location, foundMonke);
@@ -273,8 +273,8 @@ class MonkeMapsController {
 function getCalendar (): Promise<any> {
     return new Promise((resolve, reject) => {
         const base = new Airtable({
-            apiKey: process.env.AIRTABLE_API,
-        }).base(process.env.AIRTABLE_BASE_ID);
+            apiKey: process.env.AIRTABLE_API ?? process.env.APPSETTING_AIRTABLE_API,
+        }).base(process.env.AIRTABLE_BASE_ID ?? process.env.APPSETTING_AIRTABLE_BASE_ID);
         const table = base('MonkeDAO Calendar');
     
         const events = [];
@@ -284,7 +284,7 @@ function getCalendar (): Promise<any> {
         table.select({
             view: 'Events List'
         }).eachPage((records, processNextPage) => {
-            console.log('found records ', records)
+            //console.log('found records ', records)
             records.forEach((record) => {
                 console.log('Record: ', record)
                 events.push({
@@ -299,7 +299,7 @@ function getCalendar (): Promise<any> {
                     externalLink: record.get('Form / External Link'),
                     contacts: record.get('IRL Contact')
                 });
-                console.log('Retrieved', record.get('Name'));
+                //console.log('Retrieved', record.get('Name'));
             });
     
             processNextPage();
