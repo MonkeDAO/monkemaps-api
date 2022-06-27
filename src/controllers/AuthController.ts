@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 import { Payload } from '../models/api/payload';
 import Request from '../models/api/request';
 import Monke, { IMonke } from '../models/db/monke';
-import getJWTSettings from '../utils/jwtHelper';
+import getJWTSettings from '../utils/jwthelper';
 dotenv.config();
 
 
