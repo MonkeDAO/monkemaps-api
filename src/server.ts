@@ -2,6 +2,7 @@ import express, { Application, Router } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import monkeMapsRouter from './routers/MonkeMapsRouter';
+import defaultRouter from './routers/DefaultRouter';
 import connectDB from './connections/database';
 import Airtable from 'airtable';
 
@@ -32,6 +33,7 @@ class Server {
 
     private routerConfig() {
         this.app.use('/monkemaps', monkeMapsRouter);
+        this.app.use('/', defaultRouter);
     }
 
     public start = (port: number) => {

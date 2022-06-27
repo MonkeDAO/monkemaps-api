@@ -36,7 +36,7 @@ class AuthController {
         });
       }
 
-      const isMatch = signature === user.signature;
+      const isMatch = false;
 
       if (!isMatch) {
         return res.status(HttpStatusCodes.BAD_REQUEST).json({
