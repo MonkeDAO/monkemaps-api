@@ -1,12 +1,17 @@
 import { Response } from "express";
-import { check, validationResult } from "express-validator";
+import { validationResult } from "express-validator";
+import { MIN_LAMPORTS, MAX_LAMPORTS } from "../models/constants/utils";
 import HttpStatusCodes from "http-status-codes";
 import jwt from "jsonwebtoken";
 import dotenv from 'dotenv'
-import { Payload } from '../models/api/payload';
+import { Payload, TxnPayload } from '../models/api/payload';
 import Request from '../models/api/request';
 import Monke, { IMonke } from '../models/db/monke';
 import getJWTSettings from '../utils/jwthelper';
+import assert from "assert";
+import * as Solana from "@solana/web3.js";
+import _ from 'lodash';
+
 dotenv.config();
 
 
@@ -66,6 +71,46 @@ class AuthController {
       console.error(err.message);
       res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
     }
+  }
+  public async init(req: Request, res: Response) {
+    try {
+      const { walletId, messageStr } = req.body;
+      const from: string = walletId;
+      const connection = new Solana.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+      const sigs = await connection.getConfirmedSignaturesForAddress2(new Solana.PublicKey(from))
+      const lamports = _.random(MIN_LAMPORTS, MAX_LAMPORTS)
+      const destination = from;
+      const jwtSettings = getJWTSettings();
+      
+      assert(jwtSettings.JWTSecret);
+
+      const payload: TxnPayload = {
+        walletId: walletId,
+        lamports,
+        destination,
+        signature: sigs && sigs.length > 0 ? sigs[0].signature : null,
+        message: messageStr
+      };
+
+      jwt.sign(
+        payload,
+        jwtSettings.JWTSecret,
+        { expiresIn: jwtSettings.JWTExpiration },
+        (err, token) => {
+          if (err) throw err;
+          return res.json({ token, lamports, destination });
+        }
+      );
+  } catch (e) {
+      console.error(e);
+      return res.status(HttpStatusCodes.BAD_REQUEST).json({
+        errors: [
+          {
+            msg: "Invalid Credentials"
+          }
+        ]
+      });
+  }
   }
 }
 export default AuthController;
