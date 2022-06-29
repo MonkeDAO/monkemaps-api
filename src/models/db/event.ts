@@ -6,6 +6,7 @@ export interface IEvent extends Document {
     name: string,
     startDate: string,
     endDate: string,
+    lastModified: string,
     virtual: boolean,
     type: string,
     status: string,
@@ -60,6 +61,9 @@ const eventSchema: Schema = new Schema({
         "type": "Date"
     },
     "endDate": {
+        "type": "Date"
+    },
+    "lastModified": {
         "type": "Date"
     },
     "extraLink": {
