@@ -3,6 +3,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import monkeMapsRouter from './routers/MonkeMapsRouter';
 import defaultRouter from './routers/DefaultRouter';
+import authRouter from './routers/AuthRouter';
 import connectDB from './connections/database';
 import Airtable from 'airtable';
 
@@ -34,6 +35,7 @@ class Server {
     private routerConfig() {
         this.app.use('/monkemaps', monkeMapsRouter);
         this.app.use('/', defaultRouter);
+        this.app.use('/auth', authRouter);
     }
 
     public start = (port: number) => {
