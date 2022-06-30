@@ -19,7 +19,7 @@ export default async function (req: Request, res: Response, next: NextFunction) 
   const pubKey = req.header("x-auth-pk");
   let verified = false;
   // Check if no token
-  if (!signedMsg || !txn) {
+  if (!signedMsg || (!signedMsg && !txn)) {
     return res
       .status(HttpStatusCodes.UNAUTHORIZED)
       .json({ msg: "No token, authorization denied" });
