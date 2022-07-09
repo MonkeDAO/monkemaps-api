@@ -1,3 +1,1 @@
-export interface FetchRequest {
-    
-}
+export interface FetchRequest {}

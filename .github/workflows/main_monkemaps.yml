@@ -14,24 +14,24 @@ jobs:
     runs-on: 'ubuntu-latest'
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
-    - name: Log in to registry
-      uses: docker/login-action@v1
-      with:
-        registry: https://ghcr.io/
-        username: ${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to registry
+        uses: docker/login-action@v1
+        with:
+          registry: https://ghcr.io/
+          username: ${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push container image to registry
-      uses: docker/build-push-action@v2
-      with:
-        push: true
-        tags: ghcr.io/${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}/thedonmon/monkemaps-api:${{ github.sha }}
-        file: ./Dockerfile
+      - name: Build and push container image to registry
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: ghcr.io/${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}/thedonmon/monkemaps-api:${{ github.sha }}
+          file: ./Dockerfile
 
   deploy:
     runs-on: ubuntu-latest
@@ -41,11 +41,11 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-    - name: Deploy to Azure Web App
-      id: deploy-to-webapp
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: 'monkemaps'
-        slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_54dea296e6c04f199c92bf03979d029b }}
-        images: 'ghcr.io/${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}/thedonmon/monkemaps-api:${{ github.sha }}'
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'monkemaps'
+          slot-name: 'production'
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_54dea296e6c04f199c92bf03979d029b }}
+          images: 'ghcr.io/${{ secrets.AzureAppService_ContainerUsername_5090879a67594b85be80a890e0f5f368 }}/thedonmon/monkemaps-api:${{ github.sha }}'
