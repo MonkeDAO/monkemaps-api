@@ -48,7 +48,7 @@ const mapLocation = (location: MonkeLocation): Location => ({
 });
 
 function isUrl(text: string): boolean {
-  return text.includes('http');
+  return text?.includes('http');
 }
 
 const mapEvent = (event: any): MonkeEvent => ({
