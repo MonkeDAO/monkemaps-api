@@ -150,7 +150,6 @@ class MonkeMapsController {
         let tempMappedEvents = mappedEvents.filter(
           (ar) => !eventsFromDb.find((rm) => rm.airtableId === ar.id),
         );
-        //TODO: Upsert Events that have changed.
         let matchedDbEvents = eventsFromDb.filter((db) =>
           mappedEvents.find(
             (rm) =>
@@ -162,10 +161,9 @@ class MonkeMapsController {
           let event = mappedEvents.find((rm) => rm.id === db.airtableId);
           return mapFromDbUpsertEvent(db, event);
         });
-        console.log('TOUPDATE>>>', JSON.stringify(matchedDbEvents));
         mappedEvents = _.concat(tempMappedEvents, eventsToUpdate);
       }
-      console.log(mappedEvents);
+
       mappedEvents = await chunkEventsGetCoords(mappedEvents);
       if (mappedEvents.length > 0) {
         let eventsToInsert: MonkeEvent[] = mappedEvents.filter(
@@ -180,7 +178,7 @@ class MonkeMapsController {
         if (eventsToSave.length > 0) {
           await DbEvent.collection.insertMany(eventsToSave);
         }
-        
+
         if (eventsToUpsert.length > 0) {
           const bulkOps = eventsToUpsert.map((doc) => {
             const docUpsert = mapToDbEvent(doc);
