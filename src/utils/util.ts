@@ -15,7 +15,7 @@ const GoogleMapsLinks = {
     'goo.gl',
   ],
   isUrl(url: string) {
-    return this.urls.some((link: string) => url.includes(link));
+    return this.urls.some((link: string) => url?.includes(link));
   },
 };
 
