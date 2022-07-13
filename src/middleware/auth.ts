@@ -38,7 +38,6 @@ export default async function(
         token,
         jwtSettings.JWTSecret,
       );
-  console.log('PAYLOAD>>> ', payload)
   if (walletToUse !== payload.walletId && req.method !== 'GET') {
     return res.status(HttpStatusCodes.BAD_REQUEST).json({
       errors: [
