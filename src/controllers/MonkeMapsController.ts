@@ -38,6 +38,7 @@ type MonkeEvent = {
   link: string;
   extraLink: string;
   contacts: string[];
+  objectId?: string;
 };
 
 const mapLocation = (location: MonkeLocation): Location => ({
@@ -85,6 +86,25 @@ const mapFromDbEvent = (event: IEvent): MonkeEvent => ({
   status: event.status,
 });
 
+const mapFromDbUpsertEvent = (
+  event: IEvent,
+  updatedEvent: MonkeEvent,
+): MonkeEvent => ({
+  id: event.airtableId,
+  location: updatedEvent.location,
+  type: updatedEvent.type?.trim(),
+  name: updatedEvent.name?.trim(),
+  contacts: updatedEvent.contacts,
+  startDate: updatedEvent.startDate,
+  endDate: updatedEvent.endDate,
+  lastModified: updatedEvent.lastModified,
+  extraLink: updatedEvent.extraLink?.trim(),
+  virtual: updatedEvent.virtual,
+  link: updatedEvent.location.hasLink ? updatedEvent.location.link : '',
+  status: updatedEvent.status,
+  objectId: event._id,
+});
+
 const mapToDbEvent = (event: MonkeEvent): any => ({
   airtableId: event.id,
   location: {
@@ -125,25 +145,68 @@ class MonkeMapsController {
       let eventsFromDb = await DbEvent.find({
         airtableId: { $exists: true, $ne: '' },
       });
-      let eventsToUpdate = [];
+      let eventsToUpdate: MonkeEvent[] = [];
       if (eventsFromDb.length > 0) {
         let tempMappedEvents = mappedEvents.filter(
           (ar) => !eventsFromDb.find((rm) => rm.airtableId === ar.id),
         );
         //TODO: Upsert Events that have changed.
-        // let matchedDbEvents = eventsFromDb.filter(db => mappedEvents.find(rm => (rm.id === db.airtableId && new Date(db.lastModified) < new Date(rm.lastModified))));
-        // console.log('TOUPDATE>>>', JSON.stringify(eventsToUpdate));
-        mappedEvents = tempMappedEvents;
+        let matchedDbEvents = eventsFromDb.filter((db) =>
+          mappedEvents.find(
+            (rm) =>
+              rm.id === db.airtableId &&
+              new Date(db.lastModified) < new Date(rm.lastModified),
+          ),
+        );
+        eventsToUpdate = matchedDbEvents.map((db) => {
+          let event = mappedEvents.find((rm) => rm.id === db.airtableId);
+          return mapFromDbUpsertEvent(db, event);
+        });
+        console.log('TOUPDATE>>>', JSON.stringify(matchedDbEvents));
+        mappedEvents = _.concat(tempMappedEvents, eventsToUpdate);
       }
-      //console.log(mappedEvents);
+      console.log(mappedEvents);
       mappedEvents = await chunkEventsGetCoords(mappedEvents);
       if (mappedEvents.length > 0) {
-        let eventsToSave = mappedEvents.map(
+        let eventsToInsert: MonkeEvent[] = mappedEvents.filter(
+          (ar) => !eventsFromDb.find((rm) => rm.airtableId === ar.id),
+        );
+        let eventsToUpsert: MonkeEvent[] = mappedEvents.filter((ar) =>
+          eventsFromDb.find((rm) => rm.airtableId === ar.id),
+        );
+        let eventsToSave = eventsToInsert.map(
           (e) => new DbEvent(mapToDbEvent(e)),
         );
-        await DbEvent.collection.insertMany(eventsToSave);
+        if (eventsToSave.length > 0) {
+          await DbEvent.collection.insertMany(eventsToSave);
+        }
+        
+        if (eventsToUpsert.length > 0) {
+          const bulkOps = eventsToUpsert.map((doc) => {
+            const docUpsert = mapToDbEvent(doc);
+            return {
+              updateOne: {
+                filter: { _id: doc.objectId },
+                update: { $set: docUpsert },
+                upsert: true,
+              },
+            };
+          });
+          DbEvent.collection
+            .bulkWrite(bulkOps)
+            .then((bulkWriteOpResult) => {
+              console.log('BULK update OK');
+              console.log(JSON.stringify(bulkWriteOpResult, null, 2));
+            })
+            .catch((err) => {
+              console.log('BULK update error');
+              console.log(JSON.stringify(err, null, 2));
+            });
+        }
+        mappedEvents = eventsToInsert;
       }
 
+      eventsFromDb = await DbEvent.find({ airtableId: { $exists: true } });
       let eventsToReturn = _.concat(
         mappedEvents,
         eventsFromDb.map((x) => mapFromDbEvent(x)),
