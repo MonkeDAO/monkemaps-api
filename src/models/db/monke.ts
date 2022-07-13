@@ -1,18 +1,18 @@
-import { Document, Model, model, Schema } from 'mongoose'
-import { Location } from '../location'
+import { Document, Model, model, Schema } from 'mongoose';
+import { Location } from '../location';
 
 export interface IMonke extends Document {
-  nickName: string
-  walletId: string
-  twitter: string
-  github: string
-  telegram: string
-  discord: string
-  id: string
-  monkeId: string
-  location: Location
-  image: string
-  monkeNumber: string
+  nickName: string;
+  walletId: string;
+  twitter: string;
+  github: string;
+  telegram: string;
+  discord: string;
+  id: string;
+  monkeId: string;
+  location: Location;
+  image: string;
+  monkeNumber: string;
 }
 
 const subSchema = new Schema(
@@ -31,7 +31,7 @@ const subSchema = new Schema(
     },
   },
   { _id: false },
-)
+);
 
 const monkeSchema: Schema = new Schema({
   walletId: {
@@ -83,8 +83,8 @@ const monkeSchema: Schema = new Schema({
     type: subSchema,
     required: false,
   },
-})
+});
 
-const Monke: Model<IMonke> = model<IMonke>('Monke', monkeSchema)
+const Monke: Model<IMonke> = model<IMonke>('Monke', monkeSchema);
 
-export default Monke
+export default Monke;

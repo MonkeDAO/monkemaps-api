@@ -1,21 +1,21 @@
-import { Document, Model, model, Schema } from 'mongoose'
-import { MonkeLocation } from '../location'
+import { Document, Model, model, Schema } from 'mongoose';
+import { MonkeLocation } from '../location';
 
 export interface IEvent extends Document {
-  name: string
-  startDate: string
-  endDate: string
-  lastModified: string
-  virtual: boolean
-  type: string
-  status: string
-  link: string
-  extraLink: string
-  contacts: string[]
-  location: MonkeLocation
-  id: string
-  image: string
-  airtableId: string
+  name: string;
+  startDate: string;
+  endDate: string;
+  lastModified: string;
+  virtual: boolean;
+  type: string;
+  status: string;
+  link: string;
+  extraLink: string;
+  contacts: string[];
+  location: MonkeLocation;
+  id: string;
+  image: string;
+  airtableId: string;
 }
 
 const subSchema = new Schema(
@@ -40,7 +40,7 @@ const subSchema = new Schema(
     },
   },
   { _id: false },
-)
+);
 
 const eventSchema: Schema = new Schema({
   type: {
@@ -84,8 +84,8 @@ const eventSchema: Schema = new Schema({
     required: false,
     default: '',
   },
-})
+});
 
-const DbEvent: Model<IEvent> = model<IEvent>('DbEvent', eventSchema)
+const DbEvent: Model<IEvent> = model<IEvent>('DbEvent', eventSchema);
 
-export default DbEvent
+export default DbEvent;

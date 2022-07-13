@@ -1,9 +1,10 @@
-import { Router } from 'express'
-import AuthController from '../controllers/AuthController'
+import { Router } from 'express';
+import AuthController from '../controllers/AuthController';
 
-const router = Router()
-const authController = new AuthController()
+const router = Router();
+const authController = new AuthController();
 
-router.post('/', authController.init)
+router.post('/txn', authController.initTxnSigned);
+router.post('/sign', authController.signedMessage);
 
-export default router
+export default router;

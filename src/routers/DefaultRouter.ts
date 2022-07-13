@@ -1,9 +1,9 @@
-import express, { Router } from 'express'
-import HelloController from '../controllers/HelloController'
+import express, { Router } from 'express';
+import HelloController from '../controllers/HelloController';
 
-const router = Router()
-const helloController = new HelloController()
+const router = Router();
+const helloController = new HelloController();
 
-router.get('/', helloController.hello)
+router.get('/', helloController.hello);
 
-export default router
+export default router;

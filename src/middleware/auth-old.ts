@@ -1,6 +1,8 @@
 import HttpStatusCodes from 'http-status-codes';
 import { Response, NextFunction } from 'express';
 import Request from '../models/api/request';
+import bs58 from 'bs58';
+import { sign } from 'tweetnacl';
 import {
   Connection,
   ParsedInstruction,
@@ -11,7 +13,7 @@ import { getParsedNftAccountsByOwner } from '@nfteyez/sol-rayz';
 import getJWTSettings from '../utils/jwthelper';
 import jwt from 'jsonwebtoken';
 import assert from 'assert';
-import { Payload, TxnPayload } from '../models/api/payload';
+import { TxnPayload } from '../models/api/payload';
 
 export default async function (
   req: Request,
@@ -19,41 +21,26 @@ export default async function (
   next: NextFunction,
 ) {
   // Get token from header
-  const token = req.header('x-auth-token');
   const txn = req.header('x-auth-txn');
-  const hardware = req.header('x-auth-hw');
-  const { id, walletId } = req.params;
-  let walletToUse = id ?? walletId;
+  const nonce = req.header('x-auth-nonce');
+  const message = req.header('x-auth-message');
+  const signedMsg = req.header('x-auth-signed');
+  const pubKey = req.header('x-auth-pk');
   let verified = false;
   // Check if no token
-  if (!token) {
+  if (!signedMsg || (!signedMsg && !txn)) {
     return res
       .status(HttpStatusCodes.UNAUTHORIZED)
       .json({ msg: 'No token, authorization denied' });
   }
+  // Verify token
   try {
-    const jwtSettings = getJWTSettings();
-    const payload: TxnPayload | Payload | any = jwt.verify(
-      token,
-      jwtSettings.JWTSecret,
-    );
-    if (walletToUse !== payload.walletId && req.method !== 'GET') {
-      return res.status(HttpStatusCodes.BAD_REQUEST).json({
-        errors: [
-          {
-            msg: 'Invalid Credentials',
-          },
-        ],
-      });
-    }
-    // Verify token
-
     const connection = new Connection(
       process.env.RPC_URL || process.env.APPSETTING_RPC_URL,
       'confirmed',
     );
     let nftResult = await getParsedNftAccountsByOwner({
-      publicAddress: payload.walletId,
+      publicAddress: pubKey,
       connection,
     });
     nftResult = nftResult.filter(
@@ -67,7 +54,13 @@ export default async function (
         .json({ msg: 'No monkes, authorization denied' });
     }
 
-    if (hardware && hardware !== '') {
+    if (txn && txn !== '') {
+      const jwtSettings = getJWTSettings();
+      const payload: TxnPayload | any = jwt.verify(
+        signedMsg,
+        jwtSettings.JWTSecret,
+      );
+
       const sigs = await connection.getConfirmedSignaturesForAddress2(
         new PublicKey(payload.walletId as string),
       );
@@ -108,7 +101,16 @@ export default async function (
       assert(instr.parsed.info.source === payload.walletId);
       verified = true;
     } else {
-      verified = payload.verified;
+      const messageDecoded = Buffer.from(message, 'base64').toString('utf-8');
+      console.log('DECODED', messageDecoded);
+      const signedMessage = bs58.decode(signedMsg);
+      const encodedMessage = new TextEncoder().encode(messageDecoded);
+      const publicKey = new PublicKey(pubKey);
+      verified = sign.detached.verify(
+        encodedMessage,
+        signedMessage,
+        publicKey.toBytes(),
+      );
     }
     if (verified) {
       next();
