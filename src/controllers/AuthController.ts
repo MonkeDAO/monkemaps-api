@@ -128,7 +128,7 @@ class AuthController {
         { expiresIn: jwtSettings.JWTExpiration },
         (err, token) => {
           if (err) throw err;
-          return res.json({ token });
+          return res.status(HttpStatusCodes.OK).json({ token });
         },
       );
     } catch (e) {
@@ -194,7 +194,7 @@ class AuthController {
         { expiresIn: jwtSettings.JWTExpiration },
         (err, token) => {
           if (err) throw err;
-          return res.json({ token, lamports, destination });
+          return res.status(HttpStatusCodes.OK).json({ token, lamports, destination });
         },
       );
     } catch (e) {
