@@ -145,7 +145,8 @@ class AuthController {
 
   public async initTxnSigned(req: Request, res: Response) {
     try {
-      const { walletId, messageStr } = req.body;
+      const { walletId, message } = req.body;
+      const messageStr = message;
       const from: string = walletId;
       const connection = new Solana.Connection(
         process.env.RPC_URL || process.env.APPSETTING_RPC_URL,
@@ -154,6 +155,24 @@ class AuthController {
       const sigs = await connection.getConfirmedSignaturesForAddress2(
         new Solana.PublicKey(from),
       );
+      let nftResult = await getParsedNftAccountsByOwner({
+        publicAddress: walletId,
+        connection,
+      });
+      nftResult = nftResult.filter(
+        (x) =>
+          x.updateAuthority ===
+          (process.env.COLLECTION || process.env.APPSETTING_COLLECTION),
+      );
+      if (nftResult.length === 0) {
+        return res
+          .status(HttpStatusCodes.UNAUTHORIZED)
+          .json({ msg: 'No monkes, authorization denied' });
+      }
+      const messageDecoded = Buffer.from(messageStr, 'base64').toString(
+        'utf-8',
+      );
+      
       const lamports = _.random(MIN_LAMPORTS, MAX_LAMPORTS);
       const destination = from;
       const jwtSettings = getJWTSettings();
@@ -165,7 +184,8 @@ class AuthController {
         lamports,
         destination,
         signature: sigs && sigs.length > 0 ? sigs[0].signature : null,
-        message: messageStr,
+        message: messageDecoded,
+        verified: false,
       };
 
       jwt.sign(
