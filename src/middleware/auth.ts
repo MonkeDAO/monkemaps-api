@@ -26,7 +26,7 @@ export default async function (
   let walletToUse = id ?? walletId;
   let verified = false;
   // Check if no token
-  if (!token) {
+  if (!token || token === '') {
     return res
       .status(HttpStatusCodes.UNAUTHORIZED)
       .json({ msg: 'No token, authorization denied' });
