@@ -8,7 +8,7 @@ export interface JWT {
 
 export default function getJWTSettings(): JWT {
   const secret = process.env.JWTSECRET ?? process.env.APPSETTING_JWTSECRET;
-  const expiration = 920;
+  const expiration = 1800;
   return {
     JWTExpiration: expiration,
     JWTSecret: secret,

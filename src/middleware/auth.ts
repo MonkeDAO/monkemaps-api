@@ -22,8 +22,15 @@ export default async function (
   const token = req.header('x-auth-token');
   const txn = req.header('x-auth-txn');
   const hardware = req.header('x-auth-hw');
-  const { id, walletId } = req.params;
-  let walletToUse = id ?? walletId;
+  const reqParamList = Object.keys(req.params);
+  let walletToUse = '';
+
+  if(reqParamList.length > 0 && reqParamList.includes('id') || reqParamList.includes('walletId')) {
+    walletToUse = req.params.id || req.params.walletId;
+  }
+  else {
+    walletToUse = req.body?.walletId ?? req.body?.id;
+  }
   let verified = false;
   // Check if no token
   if (!token || token === '') {
