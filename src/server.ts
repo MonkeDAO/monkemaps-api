@@ -5,6 +5,8 @@ import allRoutes from './routers/AllRouters';
 import connectDB from './connections/database';
 import Airtable from 'airtable';
 import { Express } from 'express-serve-static-core';
+import morgan from 'morgan';
+import helmet from 'helmet';
 
 class Server {
   private app: Express;
@@ -18,6 +20,8 @@ class Server {
 
   private config() {
     this.app.use(cors());
+    this.app.use(helmet());
+    this.app.use(morgan('common'));
     this.app.use(bodyParser.urlencoded({ extended: true }));
     this.app.use(bodyParser.json({ limit: '1mb' })); // 100kb default
     Airtable.configure({ apiKey: process.env.AIRTABLE_API });

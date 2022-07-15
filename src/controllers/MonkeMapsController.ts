@@ -243,6 +243,7 @@ class MonkeMapsController {
         location,
         image,
         nickName,
+        monkeNumber,
       } = req.body;
 
       let monkeParams = {
@@ -255,6 +256,7 @@ class MonkeMapsController {
         image,
         location: mapLocation(location),
         nickName,
+        monkeNumber,
       };
       let newMonke = new Monke(monkeParams);
       await newMonke.save();
