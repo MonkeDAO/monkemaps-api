@@ -90,7 +90,7 @@ export default async function (
       assert(tx);
       assert(tx.transaction.signatures.length === 1);
       assert(tx.transaction.signatures[0] === txn);
-      assert(tx.transaction.message.accountKeys.length === 2);
+      assert(tx.transaction.message.accountKeys.length >= 2);
       assert(tx.transaction.message.accountKeys[0].signer);
       assert(tx.transaction.message.accountKeys[0].writable);
       assert(
@@ -104,7 +104,7 @@ export default async function (
           SystemProgram.programId,
         ),
       );
-      assert(tx.transaction.message.instructions.length === 1);
+      assert(tx.transaction.message.instructions.length >= 1);
 
       const instr = tx.transaction.message.instructions[0] as ParsedInstruction;
       assert(instr.programId.equals(SystemProgram.programId));
