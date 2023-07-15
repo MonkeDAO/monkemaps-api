@@ -115,3 +115,7 @@ export async function GetTextFromCoordinates(
   console.log(results);
   return results.body.features[0].place_name;
 }
+
+export function getEnvVariable(varname: string): string {
+  return (process.env[varname] || process.env[`APPSETTING_${varname}`]) ?? ""
+}

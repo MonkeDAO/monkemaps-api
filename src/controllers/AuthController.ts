@@ -14,7 +14,8 @@ import _ from 'lodash';
 import bs58 from 'bs58';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { sign } from 'tweetnacl';
-import { getParsedNftAccountsByOwner } from '@nfteyez/sol-rayz';
+import { searchAssetsByCollection, Asset } from '../utils/helius';
+import { getEnvVariable } from '../utils/util';
 
 dotenv.config();
 
@@ -85,15 +86,8 @@ class AuthController {
         process.env.RPC_URL || process.env.APPSETTING_RPC_URL,
         'confirmed',
       );
-      let nftResult = await getParsedNftAccountsByOwner({
-        publicAddress: walletId,
-        connection,
-      });
-      nftResult = nftResult.filter(
-        (x) =>
-          x.updateAuthority ===
-          (process.env.COLLECTION || process.env.APPSETTING_COLLECTION),
-      );
+      const promiseAllResult = await Promise.all([searchAssetsByCollection(walletId, getEnvVariable('COLLECTION')), searchAssetsByCollection(walletId, getEnvVariable('COLLECTION2'))]);
+      const nftResult = (promiseAllResult as Asset[][]).flatMap(x => x);
       if (nftResult.length === 0) {
         return res
           .status(HttpStatusCodes.UNAUTHORIZED)
@@ -155,15 +149,8 @@ class AuthController {
       const sigs = await connection.getConfirmedSignaturesForAddress2(
         new Solana.PublicKey(from),
       );
-      let nftResult = await getParsedNftAccountsByOwner({
-        publicAddress: walletId,
-        connection,
-      });
-      nftResult = nftResult.filter(
-        (x) =>
-          x.updateAuthority ===
-          (process.env.COLLECTION || process.env.APPSETTING_COLLECTION),
-      );
+      const promiseAllResult = await Promise.all([searchAssetsByCollection(walletId, getEnvVariable('COLLECTION')), searchAssetsByCollection(walletId, getEnvVariable('COLLECTION2'))]);
+      const nftResult = (promiseAllResult as Asset[][]).flatMap(x => x);
       if (nftResult.length === 0) {
         return res
           .status(HttpStatusCodes.UNAUTHORIZED)

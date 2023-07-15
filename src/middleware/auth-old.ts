@@ -9,11 +9,12 @@ import {
   PublicKey,
   SystemProgram,
 } from '@solana/web3.js';
-import { getParsedNftAccountsByOwner } from '@nfteyez/sol-rayz';
 import getJWTSettings from '../utils/jwthelper';
 import jwt from 'jsonwebtoken';
 import assert from 'assert';
 import { TxnPayload } from '../models/api/payload';
+import { searchAssetsByCollection, Asset } from '../utils/helius';
+import { getEnvVariable } from '../utils/util';
 
 export default async function (
   req: Request,
@@ -39,15 +40,8 @@ export default async function (
       process.env.RPC_URL || process.env.APPSETTING_RPC_URL,
       'confirmed',
     );
-    let nftResult = await getParsedNftAccountsByOwner({
-      publicAddress: pubKey,
-      connection,
-    });
-    nftResult = nftResult.filter(
-      (x) =>
-        x.updateAuthority ===
-        (process.env.COLLECTION || process.env.APPSETTING_COLLECTION),
-    );
+    const promiseAllResult = await Promise.all([searchAssetsByCollection(pubKey, getEnvVariable('COLLECTION')), searchAssetsByCollection(pubKey, getEnvVariable('COLLECTION2'))]);
+    const nftResult = (promiseAllResult as Asset[][]).flatMap(x => x);
     if (nftResult.length === 0) {
       return res
         .status(HttpStatusCodes.UNAUTHORIZED)
