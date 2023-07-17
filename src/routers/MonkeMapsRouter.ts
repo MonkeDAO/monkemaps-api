@@ -7,10 +7,10 @@ import auth from '../middleware/auth';
 const router = Router();
 const monkeMapsController = new MonkeMapsController();
 const authController = new AuthController();
-
 router.get('/', auth, monkeMapsController.get);
 router.get('/events', auth, monkeMapsController.get);
 router.get('/users', auth, monkeMapsController.getAllMonkes);
+router.get('/stale', monkeMapsController.getAllMonkesStale);
 router.post('/users', auth, monkeMapsController.createmonke);
 router.get('/users/:id', auth, monkeMapsController.getUser);
 router.put('/users/:id', auth, monkeMapsController.updatemonke);

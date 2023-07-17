@@ -30,11 +30,20 @@ export interface Params {
     after?: string;
 }
 
-export interface SearchAssetRequest {
+export interface SearchAssetsRequest {
     jsonrpc: string;
     id: string;
     method: 'searchAssets';
     params: Params;
+}
+
+export interface GetAssetRequest {
+    jsonrpc: string;
+    id: string;
+    method: 'getAsset';
+    params: {
+        id: string;
+    };
 }
 
 export interface Attribute {
@@ -124,12 +133,16 @@ export interface AssetsResponse {
     };
 }
 
+export interface AssetResponse {
+    result: Asset;
+}
+
 export const searchAssetsByCollection = async (ownerAddress: string, collection: string): Promise<Asset[]> => {
     const url = getEnvVariable('HELIUS_RPC')
     if (!url || url == '') throw new Error('HELIUS_RPC not set');
     const responseAssets: Asset[] = [];
     try {
-        const searchAssetsRequest: SearchAssetRequest = {
+        const searchAssetsRequest: SearchAssetsRequest = {
             jsonrpc: '2.0',
             id: `${ownerAddress}-${collection}`,
             method: 'searchAssets',
@@ -154,5 +167,36 @@ export const searchAssetsByCollection = async (ownerAddress: string, collection:
         console.log(e);
     }
     return responseAssets;
+
+};
+
+
+export const getAsset = async (asset: string): Promise<Asset> => {
+    const url = getEnvVariable('HELIUS_RPC')
+    if (!url || url == '') throw new Error('HELIUS_RPC not set');
+    let responseAsset: Asset = {} as Asset;
+    try {
+        const getAssetRequest: GetAssetRequest = {
+            jsonrpc: '2.0',
+            id: `get-${asset}`,
+            method: 'getAsset',
+            params: {
+                id: asset
+            }
+        }
+        const response = await fetch(url, { method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }, body: JSON.stringify(getAssetRequest) });
+        if (response.ok) {
+            const responseJson: AssetResponse = await response.json();
+            if (responseJson.result){
+                responseAsset = responseJson.result;
+            }
+        }
+    } catch (e) {
+        console.log(e);
+    }
+    return responseAsset;
 
 };

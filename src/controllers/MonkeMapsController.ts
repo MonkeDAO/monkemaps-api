@@ -11,6 +11,7 @@ import {
   GetTextFromCoordinates,
   GetCoordinatesFromText,
 } from '../utils/util';
+import { getAsset } from '../utils/helius';
 dotenv.config();
 
 type Monke = {
@@ -225,6 +226,31 @@ class MonkeMapsController {
     try {
       const result = await Monke.find({ walletId: { $exists: true } });
       res.send(JSON.stringify(result.map((x) => x.toObject())));
+    } catch (error) {
+      console.log(error, error.message);
+      res.status(400).send(error);
+    }
+  }
+
+  public async getAllMonkesStale(eq: Request, res: Response) {
+    try {
+      const result = await Monke.find({ walletId: { $exists: true } });
+      const monkeObj = result.map((x) => x.toObject());
+      const staleMonke: IMonke[] = [];
+      for (let i = 0; i < monkeObj.length; i++) {
+        const monke = monkeObj[i];
+        if (!monke.monkeId) {
+          continue;
+        }
+        const getAssetResponse = await getAsset(monke.monkeId);
+        if (getAssetResponse?.ownership) { 
+          if (getAssetResponse.ownership.owner != monke.walletId && !getAssetResponse.ownership.delegated) {
+            console.log('found stale monke', monke.monkeId, monke.walletId, getAssetResponse.ownership.owner, JSON.stringify(getAssetResponse.ownership, null, 2))
+            staleMonke.push(monke as IMonke);
+          }
+        }
+      }
+      res.send(JSON.stringify({ stale: staleMonke, total: staleMonke.length, total_monkes: monkeObj.length }));
     } catch (error) {
       console.log(error, error.message);
       res.status(400).send(error);
