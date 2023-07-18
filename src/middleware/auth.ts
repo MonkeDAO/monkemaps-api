@@ -2,6 +2,7 @@ import HttpStatusCodes from 'http-status-codes';
 import { Response, NextFunction } from 'express';
 import Request from '../models/api/request';
 import {
+  ComputeBudgetProgram,
   Connection,
   ParsedInstruction,
   PublicKey,
@@ -85,22 +86,25 @@ export default async function (
       assert(tx.transaction.signatures.length === 1);
       assert(tx.transaction.signatures[0] === txn);
       assert(tx.transaction.message.accountKeys.length >= 2);
-      assert(tx.transaction.message.accountKeys[0].signer);
-      assert(tx.transaction.message.accountKeys[0].writable);
-      assert(
-        tx.transaction.message.accountKeys[0].pubkey.toString() ===
-          payload.walletId,
-      );
-      assert(!tx.transaction.message.accountKeys[1].signer);
-      assert(!tx.transaction.message.accountKeys[1].writable);
-      assert(
-        tx.transaction.message.accountKeys[1].pubkey.equals(
-          SystemProgram.programId,
-        ),
-      );
-      assert(tx.transaction.message.instructions.length >= 1);
+      const accountKeys = tx.transaction.message.accountKeys;
 
-      const instr = tx.transaction.message.instructions[0] as ParsedInstruction;
+      // Assert the public key is present in account keys
+      const publicKeyOccurrences = accountKeys.filter(key => key.pubkey.toString() === payload.walletId);
+      assert(publicKeyOccurrences.length === 1, "Expected the provided public key to be present exactly once in the account keys");
+
+      accountKeys.forEach((key, i) => {
+        if (key.signer) {
+          // If the account key is a signer, assert it is equal to the public key
+          assert(key.pubkey.toString() === payload.walletId, `Expected the signer's public key ${key.pubkey.toBase58()} to match the provided public key ${payload.walletId}`);
+        } else {
+          // If the account key is not a signer, assert it is not writable
+          assert(!key.writable, `Expected account ${key.pubkey.toBase58()} at index ${i} not to be writable`);
+        }
+      });
+      assert(tx.transaction.message.instructions.length >= 1);
+      const instructions = tx.transaction.message.instructions.filter(i => !i.programId.equals(ComputeBudgetProgram.programId));
+      assert(instructions.length === 1);
+      const instr = instructions[0] as ParsedInstruction;
       assert(instr.programId.equals(SystemProgram.programId));
       assert(instr.program === 'system');
       assert(instr.parsed.type === 'transfer');
